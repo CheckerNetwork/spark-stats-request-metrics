@@ -1,108 +1,75 @@
-const parser = require('ua-parser-js');
+import { InfluxDB, Point } from '@influxdata/influxdb-client';
 
-// settings
-const MAX_REQUESTS_PER_BATCH = process.env.MAX_REQUESTS_PER_BATCH || 150;
-const MAX_TIME_AWAIT_PER_BATCH = process.env.MAX_TIME_AWAIT_PER_BATCH || 10 * 1000;
+const INFLUX_URL = process.env.INFLUX_URL || 'http://localhost:8086';
+const INFLUX_TOKEN = process.env.INFLUX_TOKEN || '';
+const INFLUX_ORG = process.env.INFLUX_ORG || '';
+const INFLUX_BUCKET = process.env.INFLUX_BUCKET || '';
 
-const INFLUXDB_HOST = process.env.INFLUXDB_HOST;
-const INFLUXDB_DATABASE = process.env.INFLUXDB_DATABASE;
-const INFLUXDB_METRIC = process.env.INFLUXDB_METRIC;
-const INFLUXDB_USERNAME = process.env.INFLUXDB_USERNAME;
-const INFLUXDB_PASSWORD = process.env.INFLUXDB_PASSWORD;
-const INFLUXDB_URL = `${INFLUXDB_HOST}/write?db=${INFLUXDB_DATABASE}&precision=s&u=${INFLUXDB_USERNAME}&p=${INFLUXDB_PASSWORD}`;
+const client = new InfluxDB({ url: INFLUX_URL, token: INFLUX_TOKEN });
 
 // global vars
-let requests = [];
-let batchIsRunning = false;
-
-addEventListener('fetch', event => {
-  event.passThroughOnException();
-  event.respondWith(logRequests(event));
-})
-
-async function logRequests(event) {
-  let requestStartTime, requestEndTime;
-  if (!batchIsRunning) {
-    event.waitUntil(handleBatch(event));
-  }
-  if (requests.length >= MAX_REQUESTS_PER_BATCH) {
-    event.waitUntil(sendMetricsToInfuxDB())
-  }
-  requestStartTime = Date.now();
-  const response = await fetch(event.request);
-  requestEndTime = Date.now();
-
-  if (event.request.headers.get('DNT') === '1') {
-    return response;
-  }
-
-  requests.push(getRequestData(event.request, response, requestStartTime, requestEndTime));
-
-  return response;
+async function handleRequest(request, env, ctx) {
+  // TODO: Replace
+  return await fetch('http://httpbin.org/status/200');
 }
 
-async function handleBatch(event) {
-  batchIsRunning = true;
-  await sleep(MAX_TIME_AWAIT_PER_BATCH);
-  try {
-    if (requests.length) event.waitUntil(sendMetricsToInfuxDB())
-  } catch (e) {
-    console.error(e);
+async function formatMetricPoint(request) {
+  const url = new URL(request.url);
+  const today = new Date();
+
+  const origin = request.headers.get("origin") ?? "";
+  const ip = request.headers.get("cf-connecting-ip") ?? "";
+  const userAgent = request.headers.get("user-agent") ?? "";
+  const country = request.headers.get("cf-ipcountry") ?? "unknown";
+  const cache = request.headers.get("cf-cache-status") ?? "unknown";
+  const service = new URL(origin).hostname.replaceAll(".", "-");
+
+  /**
+ * For every origin that reports a page_view, visitors get a unique ID every
+ * day. We don't log their IPs / UserAgents, but we do use them to calculate
+ * their IDs. Visitor IDs let us determine uniqueness.
+ *
+ * This is also the strategy Plausible uses, and is a great balance between
+ * usefulness and privacy.
+ */
+  const visitorDigest = await crypto.subtle.digest(
+    "SHA-256",
+    encoder.encode(today.toDateString() + ip + userAgent),
+  );
+  const visitor = Array.from(new Uint8Array(visitorDigest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  const point = new Point('request')
+    .tag('url', url.toString())
+    .tag('hostname', url.hostname)
+    .tag('pathname', url.pathname)
+    .tag('method', request.method)
+    .tag('cf_cache', cache)
+    .tag('country', country)
+    .tag('service', service)
+    .tag('visitor', visitor)
+    .timestamp(today);
+
+  return point;
+}
+
+async function handleMetrics(events, env, ctx) {
+  const writeApi = client.getWriteApi(INFLUX_ORG, INFLUX_BUCKET);
+  for (const event of events) {
+    const point = formatMetricPoint(event.request);
+
+    console.log(point)
+    writeApi.writePoint(point);
+
   }
-  requests = [];
-  batchIsRunning = false;
+
+  ctx.waitUntil(
+    writeApi.close()
+  )
 }
 
-function sleep(ms) {
-  return new Promise(resolve => {
-    setTimeout(resolve, ms)
-  })
-}
-
-function getRequestData(request, response, startTime, endTime) {
-  const cfData = request.cf || {};
-  const timestamp = Math.floor(Date.now() / 1000);
-  const originResponse = response || {};
-  return {
-    'timestamp': timestamp,
-    'userAgent': request.headers.get('user-agent'),
-    'referer': request.headers.get('Referer'),
-    'ip': request.headers.get('CF-Connecting-IP'),
-    'countryCode': cfData.country,
-    'url': request.url,
-    'method': request.method,
-    'status': originResponse.status,
-    'originTime': (endTime - startTime),
-    'cfCache': (originResponse) ? (response.headers.get('CF-Cache-Status') || 'miss') : 'miss',
-  };
-
-}
-
-function formMetricLine(data) {
-  let referer;
-  const url = new URL(data.url);
-  const utmSource = url.searchParams.get('utm_source') || 'empty';
-  const ua = parser(data.userAgent);
-  try {
-    referer = new URL(data.referer);
-  } catch {
-    referer = {
-      hostname: 'empty'
-    };
-  }
-  return `${INFLUXDB_METRIC},status_code=${data.status},url=${data.url},hostname=${url.hostname},pathname=${url.pathname},method=${data.method},cf_cache=${data.cfCache},country=${data.countryCode},referer=${referer.hostname},utm_source=${utmSource},browser=${ua.browser.name},os=${ua.os.name},device=${ua.device.type} duration=${data.originTime} ${data.timestamp}`
-}
-
-async function sendMetricsToInfuxDB() {
-  const metrics = requests.map(formMetricLine).join('\n');
-  try {
-    return fetch(INFLUXDB_URL, {
-      method: 'POST',
-      body: metrics,
-    }).then(function (r) {
-      return r;
-    });
-  } catch (err) {
-    console.log(err.stack || err);
-  }
+export default {
+  fetch: handleRequest,
+  tail: handleMetrics,
 }
