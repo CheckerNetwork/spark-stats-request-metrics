@@ -19,7 +19,7 @@
     "wrangler": "^3.60.3"
   },
   "dependencies": {
-    "@influxdata/influxdb-client": "^1.35.0",
+    "@influxdata/influxdb3-client": "^0.12.0",
     "ua-parser-js": "^2.0.0"
   }
 }
