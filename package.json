@@ -14,12 +14,7 @@
   "license": "MIT",
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.5.2",
-    "dotenv": "^8.2.0",
-    "vitest": "2.0.5",
-    "wrangler": "^3.60.3"
-  },
-  "dependencies": {
-    "@influxdata/influxdb3-client": "^0.12.0",
-    "ua-parser-js": "^2.0.0"
+    "wrangler": "^3.60.3",
+    "vitest": "2.0.5"
   }
 }

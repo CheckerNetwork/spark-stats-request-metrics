@@ -1,38 +1,59 @@
-import { InfluxDBClient, Point } from '@influxdata/influxdb3-client';
+import zlib from 'node:zlib';
+import { promisify } from 'node:util';
 
-const INFLUX_HOST = process.env.INFLUX_HOST || 'http://localhost:8086';
-const INFLUX_TOKEN = process.env.INFLUX_TOKEN || '';
-const INFLUX_DATABASE = process.env.INFLUX_DATABASE || '';
-
-async function formatMetricPoint(request) {
+function getRequestData(request, response, startTime, endTime) {
+  const timestamp = Date.now();
+  const originResponse = response || {};
   const url = new URL(request.url);
-  const today = new Date();
-  const origin = request.headers.get("origin") ?? "";
-  const cache = request.headers.get("cf-cache-status") ?? "unknown";
-  const service = new URL(origin).hostname.replaceAll(".", "-");
-  const point = new Point('request')
-    .tag('url', url.toString())
-    .tag('hostname', url.hostname)
-    .tag('pathname', url.pathname)
-    .tag('method', request.method)
-    .tag('cf_cache', cache)
-    .tag('service', service)
-    .timestamp(today);
+  const apiKey = request.headers.get('api-key') || url.searchParams.get('api-key') || (request.headers.get('Authorization')?.startsWith('Bearer ') ? request.headers.get('Authorization').substring(7) : 'unknown');
 
-  return point;
+  return {
+    'timestamp': timestamp,
+    'url': request.url,
+    'method': request.method,
+    'status': originResponse.status,
+    'originTime': (endTime - startTime),
+    'cfCache': (originResponse) ? (response.headers.get('CF-Cache-Status') || 'miss') : 'miss',
+    'apiKey': apiKey,
+  };
 }
 
-async function reportMetric(request) {
-  const client = new InfluxDBClient({ host: INFLUX_HOST, token: INFLUX_TOKEN });
-  const point = formatMetricPoint(request);
-  await client.write(INFLUX_DATABASE, point);
-  await client.close()
+function formatRequestData(data, env) {
+  const url = new URL(data.url);
+  // We're setting field value to 1 to count the number of requests
+  return `${env.INFLUX_METRIC},status_code=${data.status},url=${data.url},hostname=${url.hostname},pathname=${url.pathname},method=${data.method},cf_cache=${data.cfCache},api_key=${data.apiKey} value=1 ${data.timestamp}`
+}
+
+async function reportMetric(request, response, startTime, endTime, env) {
+  const compress = promisify(zlib.gzip);
+  const reqData = getRequestData(request, response, startTime, endTime);
+  const line = formatRequestData(reqData, env);
+  console.log(line);
+
+  // Define API endpoint and headers
+  const url = `${env.INFLUX_URL}/api/v2/write?&bucket=${env.INFLUX_DATABASE}&precision=ms`;
+
+  // Compress the string using gzip
+  const compressedData = await compress(line);
+
+  // Make the POST request
+  return fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Token ${env.INFLUX_TOKEN}`,
+      'Content-Encoding': 'gzip',
+      'Content-Type': 'text/plain; charset=utf-8',
+    },
+    body: compressedData,
+  })
 }
 
 export default {
   async fetch(request, env, ctx) {
-    const resp = await fetch(request);
-    ctx.waitUntil(reportMetric(request));
-    return resp;
+    const reqStartTime = Date.now();
+    const response = await fetch('https://example.com');
+    const reqEndTime = Date.now();
+    ctx.waitUntil(reportMetric(request, response, reqStartTime, reqEndTime, env));
+    return response;
   }
 }
