@@ -47,16 +47,31 @@ async function reportMetric(request, response, env) {
   })
 }
 
+
+async function handleRequest(request, env, ctx) {
+  const cache = caches.default;
+  const url = new URL(request.url);
+  const newRequest = new Request(`${env.REQUEST_URL}${url.pathname}${url.search}`, request);
+  const response = await fetch(newRequest);
+
+  ctx.waitUntil(cache.put(request, response.clone()));
+  return response;
+}
+
 export default {
   async fetch(request, env, ctx) {
+    let response;
     const cache = caches.default;
-    let response = await cache.match(request);
-    if (!response) {
-      const url = new URL(request.url);
-      const newRequest = new Request(`${env.REQUEST_URL}${url.pathname}${url.search}`, request);
-      response = await fetch(newRequest);
-      ctx.waitUntil(cache.put(request, response.clone()));
-    } 
+
+    if (request.method === 'GET') {
+      response = await cache.match(request);
+      if (!response) {
+        response = await handleRequest(request, env, ctx);
+      }
+
+    } else {
+      response = await handleRequest(request, env, ctx);
+    }
 
     // report metrics for original request
     ctx.waitUntil(reportMetric(request, response, env));
