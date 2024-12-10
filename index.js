@@ -1,7 +1,7 @@
 import zlib from 'node:zlib';
 import { promisify } from 'node:util';
 
-function getRequestData(request, response, startTime, endTime) {
+function getRequestData(request, response) {
   const timestamp = Date.now();
   const originResponse = response || {};
   const url = new URL(request.url);
@@ -12,7 +12,6 @@ function getRequestData(request, response, startTime, endTime) {
     'url': request.url,
     'method': request.method,
     'status': originResponse.status,
-    'originTime': (endTime - startTime),
     'cfCache': (originResponse) ? (response.headers.get('CF-Cache-Status') || 'miss') : 'miss',
     'apiKey': apiKey,
   };
@@ -25,11 +24,10 @@ function formatRequestData(data, env) {
   return `${env.INFLUX_METRIC},status_code=${data.status},url=${formattedUrl},hostname=${url.hostname},pathname="${url.pathname}",method=${data.method},cf_cache=${data.cfCache},api_key=${data.apiKey} value=1 ${data.timestamp}`
 }
 
-async function reportMetric(request, response, startTime, endTime, env) {
+async function reportMetric(request, response, env) {
   const compress = promisify(zlib.gzip);
-  const reqData = getRequestData(request, response, startTime, endTime);
+  const reqData = getRequestData(request, response);
   const line = formatRequestData(reqData, env);
-  console.log(line);
 
   // Define API endpoint and headers
   const url = `${env.INFLUX_URL}/api/v2/write?&bucket=${env.INFLUX_DATABASE}&precision=ms`;
@@ -51,16 +49,17 @@ async function reportMetric(request, response, startTime, endTime, env) {
 
 export default {
   async fetch(request, env, ctx) {
-    const url = new URL(request.url);
-    const newUrl = `${env.REQUEST_URL}${url.pathname}${url.search}`;
-    // override the request with the new URL
-    const newRequest = new Request(newUrl, request);
-    const reqStartTime = Date.now();
-    const response = await fetch(newRequest);
-    const reqEndTime = Date.now();
+    const cache = caches.default;
+    let response = await cache.match(request);
+    if (!response) {
+      const url = new URL(request.url);
+      const newRequest = new Request(`${env.REQUEST_URL}${url.pathname}${url.search}`, request);
+      response = await fetch(newRequest);
+      ctx.waitUntil(cache.put(request, response.clone()));
+    } 
 
     // report metrics for original request
-    ctx.waitUntil(reportMetric(request, response, reqStartTime, reqEndTime, env));
+    ctx.waitUntil(reportMetric(request, response, env));
     return response;
   }
 }
