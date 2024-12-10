@@ -21,7 +21,7 @@ function getRequestData(request, response, startTime, endTime) {
 function formatRequestData(data, env) {
   const url = new URL(data.url);
   // We're setting field value to 1 to count the number of requests
-  return `${env.INFLUX_METRIC},status_code=${data.status},url=${data.url},hostname=${url.hostname},pathname=${url.pathname},method=${data.method},cf_cache=${data.cfCache},api_key=${data.apiKey} value=1 ${data.timestamp}`
+  return `${env.INFLUX_METRIC},status_code=${data.status},hostname=${url.hostname},pathname="${url.pathname}",method=${data.method},cf_cache=${data.cfCache},api_key=${data.apiKey} value=1 ${data.timestamp}`
 }
 
 async function reportMetric(request, response, startTime, endTime, env) {
