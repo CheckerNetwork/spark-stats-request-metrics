@@ -2,7 +2,6 @@
 /dist
 **/*.rs.bk
 Cargo.lock
-bin/
 pkg/
 wasm-pack.log
 worker/
