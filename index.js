@@ -49,13 +49,10 @@ async function reportMetric(request, response, env) {
 
 
 async function handleRequest(request, env, ctx) {
-  const cache = caches.default;
   const url = new URL(request.url);
   const newRequest = new Request(`${env.REQUEST_URL}${url.pathname}${url.search}`, request);
-  const response = await fetch(newRequest);
 
-  ctx.waitUntil(cache.put(request, response.clone()));
-  return response;
+  return await fetch(newRequest);
 }
 
 export default {
@@ -67,6 +64,7 @@ export default {
       response = await cache.match(request);
       if (!response) {
         response = await handleRequest(request, env, ctx);
+        ctx.waitUntil(cache.put(request, response.clone()));
       }
 
     } else {
