@@ -4,6 +4,7 @@ compatibility_date = "2024-12-05"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
+REQUEST_URL = "https://example.com"
 INFLUX_METRIC = "example"
 INFLUX_URL = "http://localhost:8086"
 INFLUX_TOKEN = "example"

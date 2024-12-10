@@ -50,9 +50,14 @@ async function reportMetric(request, response, startTime, endTime, env) {
 
 export default {
   async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    const newUrl = `${env.REQUEST_URL}${url.pathname}${url.search}`;
+    // override the request with the new URL
+    request = new Request(newUrl, request);
     const reqStartTime = Date.now();
-    const response = await fetch('https://example.com');
+    const response = await fetch(request);
     const reqEndTime = Date.now();
+
     ctx.waitUntil(reportMetric(request, response, reqStartTime, reqEndTime, env));
     return response;
   }
