@@ -20,8 +20,9 @@ function getRequestData(request, response, startTime, endTime) {
 
 function formatRequestData(data, env) {
   const url = new URL(data.url);
+  const formattedUrl = url.toString().replaceAll('=', '\\=');
   // We're setting field value to 1 to count the number of requests
-  return `${env.INFLUX_METRIC},status_code=${data.status},hostname=${url.hostname},pathname="${url.pathname}",method=${data.method},cf_cache=${data.cfCache},api_key=${data.apiKey} value=1 ${data.timestamp}`
+  return `${env.INFLUX_METRIC},status_code=${data.status},url=${formattedUrl},hostname=${url.hostname},pathname="${url.pathname}",method=${data.method},cf_cache=${data.cfCache},api_key=${data.apiKey} value=1 ${data.timestamp}`
 }
 
 async function reportMetric(request, response, startTime, endTime, env) {
@@ -53,11 +54,12 @@ export default {
     const url = new URL(request.url);
     const newUrl = `${env.REQUEST_URL}${url.pathname}${url.search}`;
     // override the request with the new URL
-    request = new Request(newUrl, request);
+    const newRequest = new Request(newUrl, request);
     const reqStartTime = Date.now();
-    const response = await fetch(request);
+    const response = await fetch(newRequest);
     const reqEndTime = Date.now();
 
+    // report metrics for original request
     ctx.waitUntil(reportMetric(request, response, reqStartTime, reqEndTime, env));
     return response;
   }
