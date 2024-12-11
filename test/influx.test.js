@@ -18,7 +18,7 @@ describe('reportMetric', () => {
       ])
     };
     const env = {
-      INFLUX_METRIC: 'test_metric',
+      INFLUX_METRIC_NAME: 'test_metric',
       INFLUX_URL: 'https://influx.example.com',
       INFLUX_DATABASE: 'test_db',
       INFLUX_TOKEN: 'test_token'
@@ -59,7 +59,7 @@ describe('createMetricsFromRequest', () => {
       ])
     };
     const env = {
-      INFLUX_METRIC: 'test_metric'
+      INFLUX_METRIC_NAME: 'test_metric'
     };
 
     const result = createMetricsFromRequest(request, response, env);
