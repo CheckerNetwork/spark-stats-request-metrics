@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import worker, { handleRequest } from '../bin/worker.js';
-import { reportMetric } from '../lib/metrics.js';
+import { reportMetric } from '../lib/influx.js';
 
 describe('handleRequest', () => {
   it('should handle request correctly', async () => {

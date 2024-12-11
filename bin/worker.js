@@ -1,4 +1,4 @@
-import { reportMetric } from "../lib/metrics";
+import { reportMetric } from "../lib/influx.js";
 
 export const handleRequest = async (request, env) => {
   const url = new URL(request.url);
