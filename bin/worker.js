@@ -7,7 +7,7 @@ export default {
       caches.default.put(request, response.clone())
     )
     ctx.waitUntil(
-      reportMetric(request, response.headers, env)
+      reportMetric(request, env)
     );
     return response;
   }

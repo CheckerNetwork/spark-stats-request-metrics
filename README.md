@@ -35,4 +35,3 @@ Other required environment variables include the following:
 - `INFLUX_URL` - InfluxDB URL
 - `INFLUX_DATABASE` - InfluxDB database (bucket) name
 - `INFLUX_METRIC_NAME` - InfluxDB metric name
-- `REQUEST_URL` - URL of the application where requests are proxied to
