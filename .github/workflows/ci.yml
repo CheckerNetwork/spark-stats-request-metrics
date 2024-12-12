@@ -30,7 +30,6 @@ jobs:
           preCommands: |
             cp wranger.toml.example wrangler.toml
             echo "[env.production.vars]" >> wrangler.toml
-            echo "REQUEST_URL = '${{ env.REQUEST_URL }}'" >> wrangler.toml
             echo "INFLUX_URL = '${{ env.INFLUX_URL }}'" >> wrangler.toml
             echo "INFLUX_METRIC_NAME = '${{ env.INFLUX_METRIC_NAME }}'" >> wrangler.toml
             echo "INFLUX_DATABASE = '${{ env.INFLUX_DATABASE }}'" >> wrangler.toml
@@ -40,7 +39,6 @@ jobs:
           secrets: |
             INFLUX_TOKEN
         env:
-          REQUEST_URL: ${{ env.REQUEST_URL }}
           INFLUX_METRIC_NAME: ${{ env.INFLUX_METRIC }}
           INFLUX_URL: ${{ env.INFLUX_URL }}
           INFLUX_TOKEN: ${{ secrets.INFLUX_TOKEN }}
