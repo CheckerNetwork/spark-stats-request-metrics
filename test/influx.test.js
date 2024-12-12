@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { reportMetric, createMetricsFromRequest } from '../lib/influx.js';
+import { reportRequestMetric } from '../lib/influx.js';
 
-describe('reportMetric', () => {
+describe('reportRequestMetric', () => {
   it('should report metrics correctly', async () => {
     const request = {
       url: 'https://example.com/path?api-key=test-key',
@@ -19,9 +19,13 @@ describe('reportMetric', () => {
       INFLUX_TOKEN: 'test_token'
     };
 
+    const date = new Date();
+    vi.useFakeTimers();
+    vi.setSystemTime(date);
+
     global.fetch = vi.fn().mockResolvedValue({ status: 204 });
 
-    await reportMetric(request, env);
+    await reportRequestMetric(request, env);
 
     expect(global.fetch).toHaveBeenCalledWith(
       'https://influx.example.com/api/v2/write?&bucket=test_db&precision=ms',
@@ -30,29 +34,9 @@ describe('reportMetric', () => {
         headers: expect.objectContaining({
           'Authorization': 'Token test_token',
           'Content-Type': 'application/octet-stream'
-        })
+        }),
+        body: `test_metric api_key="test-key" ${date.valueOf()}`
       })
     );
-  });
-});
-
-describe('createMetricsFromRequest', () => {
-  it('should format request data correctly', () => {
-    const request = {
-      url: 'https://example.com/path?api-key=test-key',
-      method: 'GET',
-      headers: new Map([
-        ['api-key', 'test-key'],
-        ['Authorization', 'Bearer test-token']
-      ])
-    };
-
-    const env = {
-      INFLUX_METRIC_NAME: 'test_metric'
-    };
-
-    const result = createMetricsFromRequest(request, env);
-    expect(result).toContain('test_metric');
-    expect(result).toContain('api_key="test-key"');
   });
 });

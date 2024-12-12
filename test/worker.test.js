@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import worker from '../bin/worker.js';
-import { reportMetric } from '../lib/influx.js';
+import { reportRequestMetric } from '../lib/influx.js';
 
 
 
@@ -26,7 +26,7 @@ describe('worker.fetch', () => {
         method: 'GET'
       })
     );
-    expect(ctx.waitUntil).toHaveBeenCalledWith(reportMetric(request, response, env));
+    expect(ctx.waitUntil).toHaveBeenCalledWith(reportRequestMetric(request, response, env));
     expect(response.status).toBe(200);
   });
 });
