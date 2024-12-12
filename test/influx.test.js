@@ -11,12 +11,7 @@ describe('reportMetric', () => {
         ['Authorization', 'Bearer test-token']
       ])
     };
-    const response = {
-      status: 200,
-      headers: new Map([
-        ['CF-Cache-Status', 'HIT']
-      ])
-    };
+
     const env = {
       INFLUX_METRIC_NAME: 'test_metric',
       INFLUX_URL: 'https://influx.example.com',
@@ -26,7 +21,7 @@ describe('reportMetric', () => {
 
     global.fetch = vi.fn().mockResolvedValue({ status: 204 });
 
-    await reportMetric(request, response, env);
+    await reportMetric(request, env);
 
     expect(global.fetch).toHaveBeenCalledWith(
       'https://influx.example.com/api/v2/write?&bucket=test_db&precision=ms',
@@ -34,8 +29,7 @@ describe('reportMetric', () => {
         method: 'POST',
         headers: expect.objectContaining({
           'Authorization': 'Token test_token',
-          'Content-Encoding': 'gzip',
-          'Content-Type': 'text/plain; charset=utf-8'
+          'Content-Type': 'application/octet-stream'
         })
       })
     );
@@ -52,24 +46,13 @@ describe('createMetricsFromRequest', () => {
         ['Authorization', 'Bearer test-token']
       ])
     };
-    const response = {
-      status: 200,
-      headers: new Map([
-        ['CF-Cache-Status', 'HIT']
-      ])
-    };
+
     const env = {
       INFLUX_METRIC_NAME: 'test_metric'
     };
 
-    const result = createMetricsFromRequest(request, response, env);
+    const result = createMetricsFromRequest(request, env);
     expect(result).toContain('test_metric');
-    expect(result).toContain('status_code=200');
-    expect(result).toContain('url=https://example.com/path?api-key\\=test-key');
-    expect(result).toContain('hostname=example.com');
-    expect(result).toContain('pathname="/path"');
-    expect(result).toContain('method=GET');
-    expect(result).toContain('cf_cache_status=HIT');
-    expect(result).toContain('api_key=test-key');
+    expect(result).toContain('api_key="test-key"');
   });
 });
