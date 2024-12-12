@@ -27,7 +27,7 @@ npm run dev
 
 ## Deployment
 
-In order to deploy your worker, you need to have a [Cloudflare API token](https://developers.cloudflare.com/workers/wrangler/migration/v1-to-v2/wrangler-legacy/authentication/#api-token) and running instance of InfluDB.
+In order to deploy your worker, you need to have a [Cloudflare API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/) and running instance of InfluDB.
 
 Add generated API token to Github secrets as `CLOUDFLARE_API_TOKEN` and authentication token under `INFLUX_TOKEN`.
 
