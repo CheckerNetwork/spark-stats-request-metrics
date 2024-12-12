@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { reportRequestMetric } from '../lib/influx.js';
 
 describe('reportRequestMetric', () => {
-  it('should report metrics correctly', async () => {
+  it('should report metrics to InfluxDB over HTTP', async () => {
     const request = {
       url: 'https://example.com/path?api-key=test-key',
       method: 'GET',
