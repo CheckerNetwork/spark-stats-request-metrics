@@ -13,11 +13,11 @@ npm install
 2. Copy example files
 
 ```
-cp .env.example .env
+cp .dev.vars.example .dev.vars
 cp wrangler.toml.example wrangler.toml
 ```
 
-3. Edit environment variables in `.env` and `wrangler.toml` files
+3. Edit secrets inside `.dev.vars` and environment variables inside `wrangler.toml` files
 
 3. Run your worker
 
@@ -25,9 +25,9 @@ cp wrangler.toml.example wrangler.toml
 npm run dev
 ```
 
-## Deployment
+## Deployment to production
 
-In order to deploy your worker, you need to have a [Cloudflare API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/) and running instance of InfluDB.
+In order to deploy your worker via Github Actions, you need to have a [Cloudflare API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/) and running instance of InfluxDB.
 
 Add generated API token to Github secrets as `CLOUDFLARE_API_TOKEN` and authentication token under `INFLUX_TOKEN`.
 
