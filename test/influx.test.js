@@ -14,7 +14,7 @@ describe('reportRequestMetric', () => {
   })
 
   it('reports request metrics to InfluxDB over HTTP', async () => {
-    const env = withTestEnvitronment()
+    const env = givenTestEnvironment()
     const request = {
       url: 'https://example.com/path',
       method: 'GET',
@@ -40,7 +40,7 @@ describe('reportRequestMetric', () => {
 
 describe('createMetricsFromRequest', () => {
   const date = new Date()
-  const env = withTestEnvitronment()
+  const env = givenTestEnvironment()
 
   beforeEach(() => {
     vi.useFakeTimers()
@@ -55,8 +55,6 @@ describe('createMetricsFromRequest', () => {
     {
       description: 'when request has an API key in the Authorization header',
       request: {
-        url: 'https://example.com/path',
-        method: 'GET',
         headers: new Map([['Authorization', 'Bearer test-key']]),
       },
       expectedApiKey: 'test-key',
@@ -64,8 +62,6 @@ describe('createMetricsFromRequest', () => {
     {
       description: 'when request has an API key in the api-key header',
       request: {
-        url: 'https://example.com/path',
-        method: 'GET',
         headers: new Map([['api-key', 'test-key']]),
       },
       expectedApiKey: 'test-key',
@@ -74,25 +70,26 @@ describe('createMetricsFromRequest', () => {
       description: 'when request has an API key in the query string',
       request: {
         url: 'https://example.com/path?api-key=test-key',
-        method: 'GET',
-        headers: new Map(),
       },
       expectedApiKey: 'test-key',
     },
     {
       description: 'when request has no API key',
-      request: {
-        url: 'https://example.com/path',
-        method: 'GET',
-        headers: new Map(),
-      },
+      request: {},
       expectedApiKey: 'unknown',
     },
   ]
 
   testCases.forEach(({ description, request, expectedApiKey }) => {
     it(description, () => {
-      const result = createMetricsFromRequest(request, env)
+      const fullRequest = {
+        url: 'https://example.com/path',
+        method: 'GET',
+        headers: new Map(),
+        ...request
+      }
+
+      const result = createMetricsFromRequest(fullRequest, env)
       expect(result).toContain(expectedApiKey)
     })
   })
@@ -100,7 +97,7 @@ describe('createMetricsFromRequest', () => {
 
 describe('writeMetrics', () => {
   it('send request metrics to InfluxDB over HTTP', async () => {
-    const env = withTestEnvitronment()
+    const env = givenTestEnvironment()
     const lineProtocolData = 'test_metric api_key="test-key"'
     global.fetch = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
 
@@ -121,7 +118,7 @@ describe('writeMetrics', () => {
   })
 })
 
-const withTestEnvitronment = () => {
+const givenTestEnvironment = () => {
   return {
     INFLUX_METRIC_NAME: 'test_metric',
     INFLUX_URL: 'https://influx.example.com',
