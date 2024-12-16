@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { createMetricsFromRequest, writeMetrics, reportRequestMetric } from '../lib/influx.js'
+import { createMetricsFromRequest, writeMetrics, reportRequestMetrics } from '../lib/influx.js'
 
-describe('reportRequestMetric', () => {
+describe('reportRequestMetrics', () => {
   const date = new Date()
 
   beforeEach(() => {
@@ -22,7 +22,7 @@ describe('reportRequestMetric', () => {
     }
     global.fetch = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
 
-    await reportRequestMetric(request, env);
+    await reportRequestMetrics(request, env);
 
     expect(global.fetch).toHaveBeenCalledWith(
       'https://influx.example.com/api/v2/write?&bucket=test_db&precision=ms',

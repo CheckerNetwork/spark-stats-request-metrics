@@ -12,11 +12,11 @@ describe('worker.fetch', () => {
       waitUntil: vi.fn()
     };
     global.fetch = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
-    const reportRequestMetric = vi.fn()
-    const response = await worker.fetch(request, env, ctx, { reportRequestMetric });
+    const reportRequestMetrics = vi.fn()
+    const response = await worker.fetch(request, env, ctx, { reportRequestMetrics });
     expect(global.fetch).toHaveBeenCalledWith(request);
-    expect(reportRequestMetric).toHaveBeenCalledWith(request, env);
-    expect(ctx.waitUntil).toHaveBeenCalledWith(reportRequestMetric(request, env));
+    expect(reportRequestMetrics).toHaveBeenCalledWith(request, env);
+    expect(ctx.waitUntil).toHaveBeenCalledWith(reportRequestMetrics(request, env));
     expect(response.status).toBe(200);
   });
 });

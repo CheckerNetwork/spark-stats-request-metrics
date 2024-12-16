@@ -1,9 +1,9 @@
-import { reportRequestMetric as defaultReportRequestMetric } from '../lib/influx.js'
+import { reportRequestMetrics as defaultReportRequestMetric } from '../lib/influx.js'
 
 export default {
-  async fetch(request, env, ctx, { reportRequestMetric = defaultReportRequestMetric } = {}) {
+  async fetch(request, env, ctx, { reportRequestMetrics = defaultReportRequestMetric } = {}) {
     const response = await fetch(request)
-    ctx.waitUntil(reportRequestMetric(request, env))
+    ctx.waitUntil(reportRequestMetrics(request, env))
     return response
   },
 }
