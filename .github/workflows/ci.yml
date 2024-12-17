@@ -18,7 +18,7 @@ jobs:
       - run: npm test
 
   deploy:
-    # TODO: Renable if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     needs: [test]
     runs-on: ubuntu-latest
     steps:
