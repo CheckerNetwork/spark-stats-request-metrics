@@ -25,7 +25,7 @@ cp wrangler.toml.example wrangler.toml
 npm run dev
 ```
 
-## Deployment to production
+## Deployment (Github Actions)
 
 In order to deploy your worker via Github Actions, you need to have a [Cloudflare API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/) and running instance of InfluxDB.
 
@@ -35,3 +35,5 @@ Other required environment variables include the following:
 - `INFLUX_URL` - InfluxDB URL
 - `INFLUX_DATABASE` - InfluxDB database (bucket) name
 - `INFLUX_METRIC_NAME` - InfluxDB metric name
+
+After setting up secrets, you can push your code to Github and worker will be deployed to production environment automatically.
