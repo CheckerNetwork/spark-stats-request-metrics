@@ -13,7 +13,7 @@ jobs:
       - run: cp wrangler.toml.example wrangler.toml
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - run: npm ci
       - run: npm test
 
@@ -27,6 +27,7 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           preCommands: |
             cp wrangler.toml.example wrangler.toml
             envsubst < wrangler.toml.example > wrangler.toml
@@ -36,7 +37,7 @@ jobs:
           secrets: |
             INFLUX_TOKEN
         env:
-          INFLUX_METRIC_NAME: ${{ env.INFLUX_METRIC }}
-          INFLUX_URL: ${{ env.INFLUX_URL }}
+          INFLUX_METRIC_NAME: ${{ vars.INFLUX_METRIC_NAME }}
+          INFLUX_URL: ${{ vars.INFLUX_URL }}
           INFLUX_TOKEN: ${{ secrets.INFLUX_TOKEN }}
-          INFLUX_DATABASE: ${{ env.INFLUX_DATABASE }}
+          INFLUX_DATABASE: ${{ vars.INFLUX_DATABASE }}
