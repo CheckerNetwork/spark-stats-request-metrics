@@ -28,7 +28,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           preCommands: |
-            cp wrangler.toml.example wranger.toml
+            cp wrangler.toml.example wrangler.toml
             envsubst < wrangler.toml.example > wrangler.toml
           postCommands: |
             rm -f wrangler.toml
