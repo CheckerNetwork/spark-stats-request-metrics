@@ -37,7 +37,7 @@ jobs:
           secrets: |
             INFLUX_TOKEN
         env:
-          INFLUX_METRIC_NAME: ${{ secrets.INFLUX_METRIC }}
-          INFLUX_URL: ${{ secrets.INFLUX_URL }}
+          INFLUX_METRIC_NAME: ${{ vars.INFLUX_METRIC_NAME }}
+          INFLUX_URL: ${{ vars.INFLUX_URL }}
           INFLUX_TOKEN: ${{ secrets.INFLUX_TOKEN }}
-          INFLUX_DATABASE: ${{ secrets.INFLUX_DATABASE }}
+          INFLUX_DATABASE: ${{ vars.INFLUX_DATABASE }}
