@@ -9,7 +9,7 @@ INFLUX_METRIC_NAME = "example"
 INFLUX_URL = "http://localhost:8086"
 INFLUX_DATABASE = "example"
 
-[env.dev.production]
+[env.production.vars]
 ENVIRONMENT = "production"
 INFLUX_METRIC_NAME = "$INFLUX_METRIC_NAME"
 INFLUX_URL = "$INFLUX_URL"
