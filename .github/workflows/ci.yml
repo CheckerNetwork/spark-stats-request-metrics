@@ -13,12 +13,12 @@ jobs:
       - run: cp wrangler.toml.example wrangler.toml
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - run: npm ci
       - run: npm test
 
   deploy:
-    if: github.ref == 'refs/heads/main'
+    # TODO: Renable if: github.ref == 'refs/heads/main'
     needs: [test]
     runs-on: ubuntu-latest
     steps:
