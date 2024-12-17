@@ -6,9 +6,11 @@
   "main": "index.js",
   "scripts": {
     "deploy": "wrangler deploy",
-    "dev": "wrangler dev",
+    "deploy:prod": "wrangler deploy --env production",
+    "dev": "wrangler dev --env dev",
     "start": "wrangler dev",
-    "test": "vitest"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "author": "vanadium23 <chernoffivan@gmail.com>",
   "license": "MIT",

@@ -1,34 +1,37 @@
 # Cloudflare metrics worker
 
-Send your page views from [Cloudflare worker](https://developers.cloudflare.com/workers/) to InfluxDB.
+[Couldflare worker](https://developers.cloudflare.com/workers/) used to proxy requests to your application and send metrics to InfluxDB.
 
-![Dashboard views](static/dashboard.png)
+## Development
 
-## Requirements
-
-1. Your site need to be setup behind Cloudflare CDN.
-2. You need to setup InfluxDB with external access (make sure you have set [authentication](https://docs.influxdata.com/influxdb/v1.7/administration/authentication_and_authorization/#set-up-authentication))
-   1. Make sure InfluxDB is hosted under [supported port](https://blog.cloudflare.com/cloudflare-now-supporting-more-ports/) for Workers. Best option is 80 or 443.
-
-## How to use
-
-1. Install wrangler package
+1. Install dependencies
 
 ```
-npm i @cloudflare/wrangler -g
+npm install
 ```
 
 2. Copy example files
 
 ```
-cp .env.example .env
+cp .dev.vars.example .dev.vars
 cp wrangler.toml.example wrangler.toml
 ```
 
-3. Deploy your worker to a site with wrangler
+3. Edit secrets inside `.dev.vars` and environment variables inside `wrangler.toml` files
+
+3. Run your worker
 
 ```
-wrangler publish --env production
+npm run dev
 ```
 
-4. (Optional) If you're using Grafana with InfluxDB, then you can import [example Dashboard](static/dashboard.json) from first screen.
+## Deployment to production
+
+In order to deploy your worker via Github Actions, you need to have a [Cloudflare API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/) and running instance of InfluxDB.
+
+Add generated API token to Github secrets as `CLOUDFLARE_API_TOKEN` and authentication token under `INFLUX_TOKEN`.
+
+Other required environment variables include the following:
+- `INFLUX_URL` - InfluxDB URL
+- `INFLUX_DATABASE` - InfluxDB database (bucket) name
+- `INFLUX_METRIC_NAME` - InfluxDB metric name

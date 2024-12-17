@@ -1,11 +1,16 @@
-name = "cf-metrics"
-main = "index.js"
+name = "spark-stats-request-metrics"
+main = "bin/worker.js"
 compatibility_date = "2024-12-05"
 compatibility_flags = ["nodejs_compat"]
 
-[vars]
-REQUEST_URL = "https://example.com"
-INFLUX_METRIC = "example"
+[env.dev.vars]
+ENVIRONMENT = "dev"
+INFLUX_METRIC_NAME = "example"
 INFLUX_URL = "http://localhost:8086"
-INFLUX_TOKEN = "example"
 INFLUX_DATABASE = "example"
+
+[env.dev.production]
+ENVIRONMENT = "production"
+INFLUX_METRIC_NAME = "$INFLUX_METRIC_NAME"
+INFLUX_URL = "$INFLUX_URL"
+INFLUX_DATABASE = "$INFLUX_DATABASE"

@@ -1,0 +1,42 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cp wrangler.toml.example wrangler.toml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm test
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          preCommands: |
+            cp wranger.toml.example wrangler.toml
+            envsubst < wrangler.toml.example > wrangler.toml
+          postCommands: |
+            rm -f wrangler.toml
+          environment: production
+          secrets: |
+            INFLUX_TOKEN
+        env:
+          INFLUX_METRIC_NAME: ${{ env.INFLUX_METRIC }}
+          INFLUX_URL: ${{ env.INFLUX_URL }}
+          INFLUX_TOKEN: ${{ secrets.INFLUX_TOKEN }}
+          INFLUX_DATABASE: ${{ env.INFLUX_DATABASE }}
