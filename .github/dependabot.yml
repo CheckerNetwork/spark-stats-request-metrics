@@ -1,0 +1,31 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directories:
+      - "/"
+    schedule:
+      interval: "daily"
+      time: "09:00"
+      timezone: "Europe/Berlin"
+    versioning-strategy: increase
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps(dev)"
+    reviewers:
+      - "bajtos"
+      - "juliangruber"
+      - "pyropy"
+      - "NikolasHaimerl"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "09:00"
+      timezone: "Europe/Berlin"
+    commit-message:
+      prefix: "ci"
+    reviewers:
+      - "bajtos"
+      - "juliangruber"
+      - "pyropy"
+      - "NikolasHaimerl"
