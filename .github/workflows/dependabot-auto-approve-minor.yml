@@ -11,18 +11,9 @@ jobs:
     strategy:
       matrix:
         dependencyStartsWith:
-          - '@sentry/'
-          - mocha
-          - pg
-          - debug
-          - ethers
-          - typescript
-          - postgrator
-          - '@types/'
-          - standard
-          - cross-spawn
-          - '@filecoin-station/spark-impact-evaluator'
-          - '@fastify/'
+          - '@cloudflare/'
+          - 'wrangler'
+          - 'vitest'
     steps:
       - name: Dependabot metadata
         id: metadata
